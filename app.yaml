@@ -1,0 +1,8 @@
+runtime: nodejs18
+service : login
+
+
+handlers:
+  - url: /.*
+    script: index.js
+
