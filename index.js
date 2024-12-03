@@ -3,9 +3,11 @@ const express = require("express");
 const { OAuth2Client } = require("google-auth-library");
 const { Storage } = require("@google-cloud/storage");
 const { Firestore } = require("@google-cloud/firestore");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
+app.use(cors);
 
 const firestore = new Firestore();
 const storage = new Storage();
