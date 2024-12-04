@@ -7,7 +7,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(express.json());
-app.use(cors);
+app.use(cors());
 
 const firestore = new Firestore();
 const storage = new Storage();
@@ -17,6 +17,9 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 app.post("/auth/google", async (req, res) => {
   const { idToken } = req.body;
+  if (!idToken) {
+    return res.status(400).json({ error: "idToken is required" });
+  }
 
   try {
     const ticket = await client.verifyIdToken({
@@ -34,7 +37,6 @@ app.post("/auth/google", async (req, res) => {
       throw new Error("Invalid token payload: missing required fields");
     }
 
-    // Simpan data ke Firestore
     const userData = { username: name, email: email };
     const userRef = firestore.collection("users").doc(sub);
     await userRef.set(userData, { merge: true });
@@ -42,7 +44,8 @@ app.post("/auth/google", async (req, res) => {
     let photoURL = null;
     if (picture) {
       const response = await fetch(picture);
-      const buffer = await response.buffer();
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
       const file = bucket.file(`profile-photos/${sub}.jpg`);
       await file.save(buffer, { contentType: "image/jpeg" });
       photoURL = `https://storage.googleapis.com/${bucket.name}/profile-photos/${sub}.jpg`;
